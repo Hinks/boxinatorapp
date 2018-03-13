@@ -37,7 +37,7 @@ foo@bar:~/.../boxinatorapp/src/main/resources/webroot/boxinator-client$ npm run 
 7. 
 Open top project folder(boxinatorapp) with IntelliJ IDEA<br />
 8. Open src/main/resources/mysql.properties and add two lines:<br />
-name=yourmysqlusername<br />
+user=yourmysqlusername<br />
 password=yourmysqluserpassword
 <br />
 <br />
