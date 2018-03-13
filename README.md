@@ -2,8 +2,12 @@
 Backend: Java using vertx Web and mysql.<br />
 Frontend reactjs together with redux, react-router, less-css
 
-**Requirements**:
-one database named boxinatordb and another named boxinatordbtest.
+**Requirements**:<br />
+Java jdk 8+ <br />
+Node.js v9.5.0+ and npm v5.6.0+<br />
+MySQL Community Server v5+
+
+One database named boxinatordb and another named boxinatordbtest.
 ```console
 mysql> create database boxinatordb;
 mysql> create database boxinatordbtest;
