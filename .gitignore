@@ -209,3 +209,6 @@ buildNumber.properties
 
 src/**/*.properties
 src/main/resources/mysql.properties
+
+src/main/java/com/boxinatorapp/boxinatorapp/testClasses
+src/main/java/com/boxinatorapp/boxinatorapp/testClasses/*
