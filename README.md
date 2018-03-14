@@ -47,4 +47,18 @@ password=yourmysqluserpassword<br />
 INFO: Succeeded in deploying verticle<br />
 12. Open a browser and go to http://localhost:8080/ to try out the app! 
 
+Index:
+--
+![](docs/indexpage.png)
+---
+Add view: 
+--
+![](docs/addbox.png)
+---
+List view:
+--
+![](docs/listboxes.png)
+
+
+
 
