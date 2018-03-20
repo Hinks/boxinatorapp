@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class DatabaseVerticle extends AbstractVerticle {
@@ -85,7 +86,7 @@ public class DatabaseVerticle extends AbstractVerticle {
   private String handleDatabasePreparationFailure(Throwable err, Future<Void> startFuture ){
     LOGGER.error(err);
     startFuture.fail(err);
-    return err.getMessage();
+    return "";
   }
 
 
@@ -110,66 +111,57 @@ public class DatabaseVerticle extends AbstractVerticle {
 
     switch (action) {
       case "all-boxes":
-        fetchBoxesHandler(dbClient).accept(message);
+        fetchBoxesHandler.accept(dbClient, message);
         break;
       case "stats-boxes":
-        fetchStatsAboutBoxesHandler(dbClient).accept(message);
+        fetchStatsAboutBoxesHandler.accept(dbClient, message);
         break;
       case "save-box":
-        saveBoxHandler(dbClient).accept(message);
+        saveBoxHandler.accept(dbClient, message);
         break;
       default:
         message.fail(ErrorCodes.BAD_ACTION.ordinal(), "Bad action: " + action);
     }
   }
 
-  private Consumer<Message<JsonObject>> fetchBoxesHandler(JDBCClient dbClient){
-    return message -> {
-      DbOperations.fetchBoxes(dbClient, sqlQueries.get(SqlQuery.ALL_BOXES))
-        .compose(boxes -> {
-          message.reply(boxes);
-          return Future.future();
-        })
-        .otherwise(err -> {
-          reportQueryError(message, err);
-          return 0;
-        });
-    };
-  }
+  private BiConsumer<JDBCClient, Message<JsonObject>> fetchBoxesHandler = (dbClient, message) -> {
 
-  private Consumer<Message<JsonObject>> fetchStatsAboutBoxesHandler(JDBCClient dbClient){
-    return message -> {
-      DbOperations.fetchStatisticsAboutBoxes(dbClient, sqlQueries.get(SqlQuery.STATISTICS_ABOUT_BOXES))
-        .compose(statsAboutBoxes -> {
-          message.reply(statsAboutBoxes);
-          return Future.future();
-        })
-        .otherwise(err -> {
-          reportQueryError(message, err);
-          return 0;
-        });
-    };
-  }
+    DbOperations.fetchBoxes(dbClient, sqlQueries.get(SqlQuery.ALL_BOXES))
+      .setHandler(arBoxes -> {
+        if (arBoxes.succeeded()){
+          message.reply(arBoxes.result());
+        }else {
+          reportQueryError(message, arBoxes.cause());
+        }
+      });
+  };
 
-  private Consumer<Message<JsonObject>> saveBoxHandler(JDBCClient dbClient){
-    return message -> {
+  private BiConsumer<JDBCClient, Message<JsonObject>> fetchStatsAboutBoxesHandler = (dbClient, message) -> {
 
-      JsonObject clientJsonBox = message.body().getJsonObject("clientJsonBox");
-      JsonArray params = DbUtils.convertClientBoxToJsonArray(clientJsonBox);
+    DbOperations.fetchStatisticsAboutBoxes(dbClient, sqlQueries.get(SqlQuery.STATISTICS_ABOUT_BOXES))
+      .setHandler(arStats -> {
+        if (arStats.succeeded()){
+          message.reply(arStats.result());
+        }else {
+          reportQueryError(message, arStats.cause());
+        }
+      });
+  };
 
-      DbOperations.saveBox(dbClient, sqlQueries.get(SqlQuery.SAVE_BOX), params)
-        .compose(saveRes -> {
-          message.reply(saveRes);
-          return Future.future();
-        })
-        .otherwise(err -> {
-          reportQueryError(message, err);
-          return 0;
-        });
-    };
-  }
+  private BiConsumer<JDBCClient, Message<JsonObject>> saveBoxHandler = (dbClient, message) -> {
 
+    JsonObject clientJsonBox = message.body().getJsonObject("clientJsonBox");
+    JsonArray params = DbUtils.convertClientBoxToJsonArray(clientJsonBox);
 
+    DbOperations.saveBox(dbClient, sqlQueries.get(SqlQuery.SAVE_BOX), params)
+      .setHandler(arSaveStatus -> {
+        if (arSaveStatus.succeeded()){
+          message.reply(arSaveStatus.result());
+        }else {
+          reportQueryError(message, arSaveStatus.cause());
+        }
+      });
+  };
 
   private Properties getMySQLProperties(String fileName) throws IOException {
     InputStream mysqlPropsInputStream = getClass().getResourceAsStream("/"+fileName);
