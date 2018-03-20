@@ -12,14 +12,13 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLConnection;
-import io.vertx.ext.sql.SQLOptions;
 import io.vertx.ext.sql.UpdateResult;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class DatabaseVerticle extends AbstractVerticle {
 
@@ -39,7 +38,8 @@ public class DatabaseVerticle extends AbstractVerticle {
   public void start(Future<Void> startFuture) throws Exception {
 
     //(blocking operation), but file size is small.
-    Properties mysqlProps = getMySQLProperties();
+    Properties mysqlProps = getMySQLProperties("mysql.properties");
+    Map<SqlQuery, String> sqlQueries = loadSqlQueries("db-queries.properties");
 
     dbClient = JDBCClient.createShared(vertx, new JsonObject()
       .put("url", config().getString(CONFIG_MYSQL_JDBC_URL, "jdbc:mysql://localhost/boxinatordb?useSSL=false"))
@@ -50,8 +50,8 @@ public class DatabaseVerticle extends AbstractVerticle {
     Future<SQLConnection> prepareDatabase = Future.future();
     dbClient.getConnection(prepareDatabase);
     prepareDatabase
-      .compose(conn -> createBoxTableIfNotExists(conn))
-      .compose(conn -> resetBoxTableIfUsingTestDatabase(conn))
+      .compose(conn -> createBoxTableIfNotExists(conn, sqlQueries.get(SqlQuery.CREATE_BOX_TABLE)))
+      .compose(conn -> resetBoxTableIfUsingTestDatabase(conn, sqlQueries.get(SqlQuery.RESET_BOX_TABLE)))
       .compose(conn -> handleSuccessfulDatabasePreparation(conn, startFuture), Future.future())
       .otherwise(err -> handleDatabasePreparationFailure(err, startFuture));
 
@@ -63,9 +63,9 @@ public class DatabaseVerticle extends AbstractVerticle {
    * @param conn An open connection to the database.
    * @return A future returning the sql connection when it is completed.
    */
-  private Future<SQLConnection> createBoxTableIfNotExists(SQLConnection conn){
+  private Future<SQLConnection> createBoxTableIfNotExists(SQLConnection conn, String query){
     Future<Void> f1 = Future.future();
-    conn.execute(SqlQueries.CREATE_BOX_TABLE, f1);
+    conn.execute(query, f1);
     return f1.compose(h -> Future.succeededFuture(conn));
   }
 
@@ -77,13 +77,13 @@ public class DatabaseVerticle extends AbstractVerticle {
    * @param conn An open connection to the database.
    * @return A future returning the sql connection when it is completed.
    */
-  private Future<SQLConnection> resetBoxTableIfUsingTestDatabase(SQLConnection conn){
+  private Future<SQLConnection> resetBoxTableIfUsingTestDatabase(SQLConnection conn, String query){
 
     Future<Void> f1 = Future.future();
     boolean testModeIsEnabledInVertxConfig = config().getBoolean("testMode", false);
 
     if (testModeIsEnabledInVertxConfig){
-      conn.execute(SqlQueries.RESET_TABLE, f1);
+      conn.execute(query, f1);
     }else {
       f1.complete();
     }
@@ -146,8 +146,11 @@ public class DatabaseVerticle extends AbstractVerticle {
       case "all-boxes":
         fetchBoxesAndStats(message);
         break;
+      case "stats-boxes":
+        fetchStatsAboutBoxes(message);
+        break;
       case "save-box":
-        saveBoxHandler().apply(dbClient).accept(message);
+        saveBoxHandler(dbClient).accept(message);
         break;
       default:
         message.fail(ErrorCodes.BAD_ACTION.ordinal(), "Bad action: " + action);
@@ -224,17 +227,17 @@ public class DatabaseVerticle extends AbstractVerticle {
 
   }
 
-  private Function<JDBCClient, Consumer<Message<JsonObject>>> saveBoxHandler(){
-    return dbClient -> message -> {
+  private Consumer<Message<JsonObject>> saveBoxHandler(JDBCClient dbClient){
+    return message -> {
 
       JsonObject clientJsonBox = message.body().getJsonObject("clientJsonBox");
       JsonArray params = clientJsonBoxToDbInsertParams(clientJsonBox);
 
       Future<UpdateResult> f1 = Future.future();
-      dbClient.updateWithParams(SqlQueries.SAVE_BOX, params, f1);
+      dbClient.updateWithParams(SqlQuery.SAVE_BOX, params, f1);
       f1.compose(updateResult -> {
 
-        message.reply(new JsonObject().put("newBoxCreated", true));
+        message.reply(new JsonObject().put("saveBoxRequest", "ok"));
         return Future.future();
       })
       .otherwise(err -> {
@@ -303,7 +306,7 @@ public class DatabaseVerticle extends AbstractVerticle {
    */
   private Future<JsonArray> fetchBoxes(SQLConnection conn) {
     Future<JsonArray> future = Future.future();
-    conn.query(SqlQueries.ALL_BOXES, res -> {
+    conn.query(SqlQuery.ALL_BOXES, res -> {
 
       if (res.succeeded()) {
         ResultSet rs = res.result();
@@ -330,7 +333,7 @@ public class DatabaseVerticle extends AbstractVerticle {
   private Future<JsonObject> fetchStatsAboutBoxes(SQLConnection conn) {
     Future<JsonObject> future = Future.future();
 
-    conn.query(SqlQueries.STATS, res -> {
+    conn.query(SqlQuery.STATS, res -> {
 
       if (res.succeeded()) {
         ResultSet resultSet = res.result();
@@ -357,13 +360,30 @@ public class DatabaseVerticle extends AbstractVerticle {
    * @return Properties object containing two properties: "user" and "password" for a mysql user.
    * @throws IOException
    */
-  private Properties getMySQLProperties() throws IOException {
+  private Properties getMySQLProperties(String fileName) throws IOException {
 
-    InputStream mysqlPropsInputStream = getClass().getResourceAsStream("/mysql.properties");
+    InputStream mysqlPropsInputStream = getClass().getResourceAsStream("/"+fileName);
     Properties mysqlProps = new Properties();
     mysqlProps.load(mysqlPropsInputStream);
     mysqlPropsInputStream.close();
 
     return mysqlProps;
   }
+
+  private Map<SqlQuery, String> loadSqlQueries(String fileName) throws IOException{
+
+    InputStream queriesInputStream = getClass().getResourceAsStream("/"+fileName);
+    Properties queries = new Properties();
+    queries.load(queriesInputStream);
+    queriesInputStream.close();
+
+    return Map.of(
+      SqlQuery.CREATE_BOX_TABLE, queries.getProperty("create-box-table"),
+      SqlQuery.ALL_BOXES, queries.getProperty("all-boxes"),
+      SqlQuery.STATISTICS_ABOUT_BOXES, queries.getProperty("statistics-about-boxes"),
+      SqlQuery.SAVE_BOX, queries.getProperty("save-box"),
+      SqlQuery.RESET_BOX_TABLE, queries.getProperty("reset-box-table")
+    );
+  }
+
 }
