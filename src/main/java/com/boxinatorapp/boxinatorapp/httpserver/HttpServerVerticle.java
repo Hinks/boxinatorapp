@@ -36,6 +36,7 @@ public class HttpServerVerticle extends AbstractVerticle {
     enableStaticServingOfReactResources(router);
 
     router.get("/api/boxes").handler(this::boxesHandler);
+    router.get("/api/stats/boxes").handler(this::statsBoxesHandler);
     router.post().handler(BodyHandler.create());
     router.post("/api/savebox").handler(this::saveBoxHandler);
 
@@ -148,29 +149,48 @@ public class HttpServerVerticle extends AbstractVerticle {
     });
   }
 
-  /**
-   * Sends a message to the DatabaseVerticle over the eventbus,
-   * requesting to save a new box to the database. The message sent to
-   * the DatabaseVericle contains the box the web client posted. The format
-   * of the box sent by the web client looks like this:
-   * {
-   *  "receiver": String,
-   *  "weight": Float,
-   *  "color": String ("0,0,0"),
-   *  "destinationCountry: String
-   * }
-   *
-   * If the save operation by the DatabaseVerticle was successful it will reply
-   * with a message containing a json object like this:
-   * {
-   *  "id": Integer(last insert id)
-   * }
-   *
-   * This handler then puts the reply into a new json object({"data": reply})
-   * which will be the response to web clients.
-   *
-   * @param context Represents the context for the handling of a request in Vert.x-Web. (from the docs)
-   */
+  private void statsBoxesHandler(RoutingContext context) {
+    DeliveryOptions options = new DeliveryOptions().addHeader("action", "stats-boxes");
+    vertx.eventBus().send(boxinatorDbQueue, new JsonObject(), options, reply -> {
+      if (reply.succeeded()) {
+
+        JsonObject replyMsg = (JsonObject) reply.result().body();
+        JsonObject clientResponse = new JsonObject().put("data", replyMsg);
+
+        context.response()
+          .setStatusCode(200)
+          .putHeader("Content-Type", "application/json")
+          .end(clientResponse.encodePrettily());
+
+      } else {
+        context.fail(reply.cause());
+      }
+    });
+  }
+
+    /**
+     * Sends a message to the DatabaseVerticle over the eventbus,
+     * requesting to save a new box to the database. The message sent to
+     * the DatabaseVericle contains the box the web client posted. The format
+     * of the box sent by the web client looks like this:
+     * {
+     *  "receiver": String,
+     *  "weight": Float,
+     *  "color": String ("0,0,0"),
+     *  "destinationCountry: String
+     * }
+     *
+     * If the save operation by the DatabaseVerticle was successful it will reply
+     * with a message containing a json object like this:
+     * {
+     *  "id": Integer(last insert id)
+     * }
+     *
+     * This handler then puts the reply into a new json object({"data": reply})
+     * which will be the response to web clients.
+     *
+     * @param context Represents the context for the handling of a request in Vert.x-Web. (from the docs)
+     */
   private void saveBoxHandler(RoutingContext context) {
 
     DeliveryOptions options = new DeliveryOptions().addHeader("action", "save-box");
