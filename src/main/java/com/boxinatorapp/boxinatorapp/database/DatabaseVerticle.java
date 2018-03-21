@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.jdbc.JDBCClient;
+import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLConnection;
 
 import java.io.IOException;
@@ -15,6 +16,8 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class DatabaseVerticle extends AbstractVerticle {
 
@@ -101,14 +104,15 @@ public class DatabaseVerticle extends AbstractVerticle {
       return;
     }
 
+    Function<String, Future<ResultSet>> sqlQuerier = DbOperations.dbQuerier.apply(dbClient);
     String action = message.headers().get("action");
 
     switch (action) {
       case "all-boxes":
-        fetchBoxesHandler.accept(dbClient, message);
+        fetchBoxesHandler(sqlQuerier).accept(message);
         break;
       case "stats-boxes":
-        fetchStatsAboutBoxesHandler.accept(dbClient, message);
+        fetchStatsAboutBoxesHandler(sqlQuerier).accept(message);
         break;
       case "save-box":
         saveBoxHandler.accept(dbClient, message);
@@ -118,29 +122,38 @@ public class DatabaseVerticle extends AbstractVerticle {
     }
   }
 
-  private BiConsumer<JDBCClient, Message<JsonObject>> fetchBoxesHandler = (dbClient, message) -> {
+  private Consumer<Message<JsonObject>> fetchBoxesHandler(Function<String, Future<ResultSet>> sqlQuerier){
 
-    DbOperations.fetchBoxes(dbClient, sqlQueries.get(SqlQuery.ALL_BOXES))
-      .setHandler(arBoxes -> {
-        if (arBoxes.succeeded()){
-          message.reply(arBoxes.result());
+    return message -> {
+
+      sqlQuerier.apply(sqlQueries.get(SqlQuery.ALL_BOXES)).setHandler(arResultSet -> {
+
+          if (arResultSet.succeeded()){
+
+            JsonObject response = DbUtils.toDesiredJsonRes(arResultSet.result(), DbUtils::boxesResSetToJson);
+            message.reply(response);
+
+          }else {
+            reportQueryError(message, arResultSet.cause());
+          }
+        });
+    };
+  }
+
+  private Consumer<Message<JsonObject>> fetchStatsAboutBoxesHandler(Function<String, Future<ResultSet>> sqlQuerier){
+    return message -> {
+      sqlQuerier.apply(sqlQueries.get(SqlQuery.STATISTICS_ABOUT_BOXES)).setHandler(arResultSet -> {
+        if (arResultSet.succeeded()){
+
+          JsonObject response = DbUtils.toDesiredJsonRes(arResultSet.result(), DbUtils::statsBoxesResSetToJson);
+          message.reply(response);
+
         }else {
-          reportQueryError(message, arBoxes.cause());
+          reportQueryError(message, arResultSet.cause());
         }
       });
-  };
-
-  private BiConsumer<JDBCClient, Message<JsonObject>> fetchStatsAboutBoxesHandler = (dbClient, message) -> {
-
-    DbOperations.fetchStatisticsAboutBoxes(dbClient, sqlQueries.get(SqlQuery.STATISTICS_ABOUT_BOXES))
-      .setHandler(arStats -> {
-        if (arStats.succeeded()){
-          message.reply(arStats.result());
-        }else {
-          reportQueryError(message, arStats.cause());
-        }
-      });
-  };
+    };
+  }
 
   private BiConsumer<JDBCClient, Message<JsonObject>> saveBoxHandler = (dbClient, message) -> {
 

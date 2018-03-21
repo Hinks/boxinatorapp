@@ -8,58 +8,14 @@ import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.UpdateResult;
 
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class DbOperations {
 
-  public static Future<JsonObject> fetchBoxes(JDBCClient dbClient, String query){
-
-    Future<JsonObject> f1 = Future.future();
-    Future<ResultSet> f2 = Future.future(handler -> dbClient.query(query, handler));
-
-    f2.setHandler(arResultSet -> {
-
-      if (arResultSet.succeeded()){
-
-        JsonArray boxes = arResultSet.result().toJson().getJsonArray("rows");
-        f1.complete(new JsonObject().put("boxes", boxes));
-
-      }else {
-        f1.fail(arResultSet.cause());
-      }
-
-    });
-
-    return f1;
-  }
-
-  public static Future<JsonObject> fetchStatisticsAboutBoxes(JDBCClient dbClient, String query){
-
-    Future<JsonObject> f1 = Future.future();
-    Future<ResultSet> f2 = Future.future(handler -> dbClient.query(query, handler));
-
-    f2.setHandler(arResultSet -> {
-
-      if (arResultSet.succeeded()){
-
-        JsonObject rows = arResultSet.result().toJson().getJsonArray("rows").getJsonObject(0);
-
-        Optional<Float> totalWeight = Optional.ofNullable(rows.getFloat("TotalWeight"));
-        Optional<Float> totalShippingCost = Optional.ofNullable(rows.getFloat("TotalShippingCost"));
-
-        JsonObject stats = new JsonObject()
-          .put("totalWeight", totalWeight.orElse(0f))
-          .put("totalShippingCost", totalShippingCost.orElse(0f));
-
-        f1.complete(stats);
-
-      }else {
-        f1.fail(arResultSet.cause());
-      }
-
-    });
-
-    return f1;
-  }
+  public static Function<JDBCClient, Function<String, Future<ResultSet>>> dbQuerier =
+    dbClient ->
+      sqlQuery -> Future.future(handler -> dbClient.query(sqlQuery, handler));
 
   public static Future<JsonObject> saveBox(JDBCClient dbClient, String query, JsonArray params){
 

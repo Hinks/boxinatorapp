@@ -3,10 +3,35 @@ package com.boxinatorapp.boxinatorapp.database;
 import com.boxinatorapp.boxinatorapp.ShippingCostUtils;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.sql.ResultSet;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 public class DbUtils {
+
+
+  public static JsonObject toDesiredJsonRes(ResultSet resultSet, Function<ResultSet, JsonObject> converter){
+    return converter.apply(resultSet);
+  }
+
+  public static JsonObject boxesResSetToJson(ResultSet reslutSet){
+    JsonArray boxes = reslutSet.toJson().getJsonArray("rows");
+    return new JsonObject().put("boxes", boxes);
+  }
+
+  public static JsonObject statsBoxesResSetToJson(ResultSet resultSet){
+    JsonObject rows = resultSet.toJson().getJsonArray("rows").getJsonObject(0);
+
+    Optional<Float> totalWeight = Optional.ofNullable(rows.getFloat("TotalWeight"));
+    Optional<Float> totalShippingCost = Optional.ofNullable(rows.getFloat("TotalShippingCost"));
+
+    JsonObject stats = new JsonObject()
+      .put("totalWeight", totalWeight.orElse(0f))
+      .put("totalShippingCost", totalShippingCost.orElse(0f));
+
+    return stats;
+  }
 
   public static JsonArray convertClientBoxToJsonArray(JsonObject clientJsonBox){
 
