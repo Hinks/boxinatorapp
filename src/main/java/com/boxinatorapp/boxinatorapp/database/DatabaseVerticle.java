@@ -1,6 +1,5 @@
 package com.boxinatorapp.boxinatorapp.database;
 
-import com.boxinatorapp.boxinatorapp.ShippingCostUtils;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.Message;
@@ -14,10 +13,8 @@ import io.vertx.ext.sql.SQLConnection;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 public class DatabaseVerticle extends AbstractVerticle {
 
@@ -47,16 +44,22 @@ public class DatabaseVerticle extends AbstractVerticle {
       .put("user", mysqlProps.getProperty("user"))
       .put("password", mysqlProps.getProperty("password")));
 
-    Future<SQLConnection> prepareDatabase = Future.future();
-    dbClient.getConnection(prepareDatabase);
+    Future<SQLConnection> prepareDatabase = Future.future(handler -> dbClient.getConnection(handler));
     prepareDatabase
-      .compose(conn -> createBoxTableIfNotExists(conn))
-      .compose(conn -> resetBoxTableIfUsingTestDatabase(conn))
-      .compose(conn -> handleSuccessfulDatabasePreparation(conn, startFuture), Future.future())
-      .otherwise(err -> handleDatabasePreparationFailure(err, startFuture));
+      .compose(this::createBoxTableIfNotExists)
+      .compose(this::resetBoxTableIfUsingTestDB)
+      .compose(this::closeConn)
+      .setHandler(v -> {
+        if(v.succeeded()){
+          vertx.eventBus().consumer(config().getString(CONFIG_BOXINATORDB_QUEUE, "boxinatordb.queue"), this::onMessage);
+          startFuture.complete();
+        }else {
+          LOGGER.error(v.cause());
+          startFuture.fail(v.cause());
+        }
+      });
 
   }
-
 
   private Future<SQLConnection> createBoxTableIfNotExists(SQLConnection conn){
     Future<Void> f1 = Future.future();
@@ -64,8 +67,7 @@ public class DatabaseVerticle extends AbstractVerticle {
     return f1.compose(h -> Future.succeededFuture(conn));
   }
 
-  private Future<SQLConnection> resetBoxTableIfUsingTestDatabase(SQLConnection conn){
-
+  private Future<SQLConnection> resetBoxTableIfUsingTestDB(SQLConnection conn){
     Future<Void> f1 = Future.future();
     boolean testModeIsEnabledInVertxConfig = config().getBoolean("testMode", false);
 
@@ -74,21 +76,13 @@ public class DatabaseVerticle extends AbstractVerticle {
     }else {
       f1.complete();
     }
+
     return f1.compose(v -> Future.succeededFuture(conn));
   }
 
-  private void handleSuccessfulDatabasePreparation(SQLConnection conn, Future<Void> startFuture){
-    conn.close();
-    vertx.eventBus().consumer(config().getString(CONFIG_BOXINATORDB_QUEUE, "boxinatordb.queue"), this::onMessage);
-    startFuture.complete();
+  private Future<Void> closeConn(SQLConnection conn){
+    return Future.future(handler -> conn.close(handler));
   }
-
-  private String handleDatabasePreparationFailure(Throwable err, Future<Void> startFuture ){
-    LOGGER.error(err);
-    startFuture.fail(err);
-    return "";
-  }
-
 
 
 
