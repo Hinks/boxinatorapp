@@ -10,14 +10,13 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLConnection;
+import io.vertx.ext.sql.UpdateResult;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 public class DatabaseVerticle extends AbstractVerticle {
 
@@ -104,45 +103,57 @@ public class DatabaseVerticle extends AbstractVerticle {
       return;
     }
 
-    Function<String, Future<ResultSet>> sqlQuerier = DbOperations.dbQuerier.apply(dbClient);
     String action = message.headers().get("action");
 
     switch (action) {
       case "all-boxes":
-        fetchBoxesHandler(sqlQuerier).accept(message);
+        fetchBoxesHandler(dbClient, message);
         break;
       case "stats-boxes":
-        fetchStatsAboutBoxesHandler(sqlQuerier).accept(message);
+        fetchStatsAboutBoxesHandler(dbClient, message);
         break;
       case "save-box":
-        saveBoxHandler.accept(dbClient, message);
+        saveBoxHandler(dbClient, message);
         break;
       default:
         message.fail(ErrorCodes.BAD_ACTION.ordinal(), "Bad action: " + action);
     }
   }
 
-  private Consumer<Message<JsonObject>> fetchBoxesHandler(Function<String, Future<ResultSet>> sqlQuerier){
+  private void fetchBoxesHandler(JDBCClient dbClient, Message message){
 
-    return message -> {
+    String allBoxesQuery = sqlQueries.get(SqlQuery.ALL_BOXES);
 
-      sqlQuerier.apply(sqlQueries.get(SqlQuery.ALL_BOXES)).setHandler(arResultSet -> {
+    BiFunction<JDBCClient, String, Future<ResultSet>> simpleSQLQuery =
+      (theDbClient, theQuery) ->
+        Future.future(handler -> theDbClient.query(theQuery, handler));
 
-          if (arResultSet.succeeded()){
+    SimpleSQLOperations.simpleOperation(dbClient, allBoxesQuery, simpleSQLQuery)
+      .setHandler(arResultSet -> {
 
-            JsonObject response = DbUtils.toDesiredJsonRes(arResultSet.result(), DbUtils::boxesResSetToJson);
-            message.reply(response);
+        if (arResultSet.succeeded()){
 
-          }else {
-            reportQueryError(message, arResultSet.cause());
-          }
-        });
-    };
+          JsonObject response = DbUtils.toDesiredJsonRes(arResultSet.result(), DbUtils::boxesResSetToJson);
+          message.reply(response);
+
+        }else {
+          reportQueryError(message, arResultSet.cause());
+        }
+
+      });
   }
 
-  private Consumer<Message<JsonObject>> fetchStatsAboutBoxesHandler(Function<String, Future<ResultSet>> sqlQuerier){
-    return message -> {
-      sqlQuerier.apply(sqlQueries.get(SqlQuery.STATISTICS_ABOUT_BOXES)).setHandler(arResultSet -> {
+  private void fetchStatsAboutBoxesHandler(JDBCClient dbClient, Message<JsonObject> message) {
+
+    String statsQuery = sqlQueries.get(SqlQuery.STATISTICS_ABOUT_BOXES);
+
+    BiFunction<JDBCClient, String, Future<ResultSet>> simpleSQLQuery =
+      (theDbClient, theQuery) ->
+        Future.future(handler -> theDbClient.query(theQuery, handler));
+
+    SimpleSQLOperations.simpleOperation(dbClient, statsQuery, simpleSQLQuery)
+      .setHandler(arResultSet -> {
+
         if (arResultSet.succeeded()){
 
           JsonObject response = DbUtils.toDesiredJsonRes(arResultSet.result(), DbUtils::statsBoxesResSetToJson);
@@ -151,24 +162,32 @@ public class DatabaseVerticle extends AbstractVerticle {
         }else {
           reportQueryError(message, arResultSet.cause());
         }
-      });
-    };
+
+    });
   }
 
-  private BiConsumer<JDBCClient, Message<JsonObject>> saveBoxHandler = (dbClient, message) -> {
+  private void saveBoxHandler(JDBCClient dbClient, Message<JsonObject> message){
+
+    String saveBoxQuery = sqlQueries.get(SqlQuery.SAVE_BOX);
 
     JsonObject clientJsonBox = message.body().getJsonObject("clientJsonBox");
     JsonArray params = DbUtils.convertClientBoxToJsonArray(clientJsonBox);
 
-    DbOperations.saveBox(dbClient, sqlQueries.get(SqlQuery.SAVE_BOX), params)
-      .setHandler(arSaveStatus -> {
-        if (arSaveStatus.succeeded()){
-          message.reply(arSaveStatus.result());
+    BiFunction<JDBCClient, String, Future<UpdateResult>> simpleUpdateWithParamsQuery =
+      (theDbClient, theQuery) ->
+        Future.future(handler -> theDbClient.updateWithParams(theQuery, params, handler));
+
+    SimpleSQLOperations.simpleOperation(dbClient, saveBoxQuery, simpleUpdateWithParamsQuery)
+      .setHandler(arUpdateResult -> {
+
+        if (arUpdateResult.succeeded()){
+          message.reply(new JsonObject().put("saveBoxRequest", "ok"));
         }else {
-          reportQueryError(message, arSaveStatus.cause());
+          reportQueryError(message, arUpdateResult.cause());
         }
+
       });
-  };
+  }
 
   private Properties getMySQLProperties(String fileName) throws IOException {
     InputStream mysqlPropsInputStream = getClass().getResourceAsStream("/"+fileName);
