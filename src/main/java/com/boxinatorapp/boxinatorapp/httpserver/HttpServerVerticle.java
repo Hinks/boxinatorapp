@@ -107,28 +107,6 @@ public class HttpServerVerticle extends AbstractVerticle {
     router.route().handler(CorsHandler.create("*").allowedHeaders(allowedHeaders).allowedMethods(allowedMethods));
   }
 
-  /**
-   * Sends a message to the DatabaseVerticle over the vertx eventbus,
-   * requesting to get all boxes. The reply from the DatabaseVerticle
-   * will be a json object with the following structure:
-   * {
-   *  "boxes": [
-   *    {
-   *      "Receiver": String,
-   *      "Weight": Float,
-   *      "Color": String ("0,0,0"),
-   *      "ShippingCost": Float
-   *    }
-   *  ],
-   *  "totalWeight": Float,
-   *  "totalShippingCost": Float
-   *  }
-   *
-   * This handler then puts the reply into a new json object({"data": reply})
-   * which will be the response to web clients.
-   *
-   * @param context Represents the context for the handling of a request in Vert.x-Web. (from the docs)
-   */
   private void boxesHandler(RoutingContext context) {
 
     DeliveryOptions options = new DeliveryOptions().addHeader("action", "all-boxes");
@@ -167,30 +145,7 @@ public class HttpServerVerticle extends AbstractVerticle {
       }
     });
   }
-
-    /**
-     * Sends a message to the DatabaseVerticle over the eventbus,
-     * requesting to save a new box to the database. The message sent to
-     * the DatabaseVericle contains the box the web client posted. The format
-     * of the box sent by the web client looks like this:
-     * {
-     *  "receiver": String,
-     *  "weight": Float,
-     *  "color": String ("0,0,0"),
-     *  "destinationCountry: String
-     * }
-     *
-     * If the save operation by the DatabaseVerticle was successful it will reply
-     * with a message containing a json object like this:
-     * {
-     *  "id": Integer(last insert id)
-     * }
-     *
-     * This handler then puts the reply into a new json object({"data": reply})
-     * which will be the response to web clients.
-     *
-     * @param context Represents the context for the handling of a request in Vert.x-Web. (from the docs)
-     */
+  
   private void saveBoxHandler(RoutingContext context) {
 
     DeliveryOptions options = new DeliveryOptions().addHeader("action", "save-box");

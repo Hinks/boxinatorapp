@@ -85,7 +85,7 @@ public class DatabaseVerticle extends AbstractVerticle {
     return Future.future(handler -> conn.close(handler));
   }
 
-  
+
   private void reportQueryError(Message<JsonObject> message, Throwable cause) {
     LOGGER.error("Database query error", cause);
     message.fail(ErrorCodes.DB_ERROR.ordinal(), cause.getMessage());

@@ -35,15 +35,14 @@ public class DbUtils {
 
   public static JsonArray convertBoxToParams(JsonObject clientJsonBox){
 
-    Optional<String> receiver = Optional.ofNullable(clientJsonBox.getString("receiver"));
-    Optional<Float> weight = Optional.ofNullable(clientJsonBox.getFloat("weight"));
-    Optional<String>  color = Optional.ofNullable(clientJsonBox.getString("color"));
+    Optional<String>  receiver = Optional.ofNullable(clientJsonBox.getString("receiver"));
+    Optional<Float>   weight   = Optional.ofNullable(clientJsonBox.getFloat("weight"));
+    Optional<String>  color    = Optional.ofNullable(clientJsonBox.getString("color"));
     Optional<String>  destinationCountry = Optional.ofNullable(clientJsonBox.getString("destinationCountry"));
 
-    float shippingCost = ShippingCostUtils.calculateCost(
-      ShippingCostUtils.countryMultipliers(),
-      destinationCountry.orElse("No Valid Country"),
-      weight.orElse(0f));
+    float shippingCost = ShippingCostUtils.calculateCost(ShippingCostUtils.countryMultipliers(),
+      destinationCountry.orElse("No Valid Country"), weight.orElse(0f)
+    );
 
     JsonArray params = new JsonArray()
       .add(receiver.orElse("unknown receiver"))
