@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux'
-import boxes from './boxesReducer'
+import {boxesReducer, statisticsAboutBoxesReducer} from './boxesReducer'
 
 export default combineReducers({
-  boxes,
+  boxesReducer, statisticsAboutBoxesReducer
 })

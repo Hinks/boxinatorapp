@@ -10,6 +10,7 @@ class BoxList extends Component {
 
   componentWillMount() {
     const suppliedFetchFn = this.props.whichFetch
+
     APIUtils.getBoxes(suppliedFetchFn)
      .then(data => {
        this.props.dispatch({type: "FETCH_BOXES_FULFILLED", payload: data})
@@ -17,6 +18,14 @@ class BoxList extends Component {
      .catch(error => {
        this.props.dispatch({type: "FETCH_BOXES_REJECTED", payload: error})
      })
+
+    APIUtils.getStatisticsAboutBoxes(suppliedFetchFn)
+      .then(data => {
+        this.props.dispatch({type: "FETCH_STATISTICS_ABOUT_BOXES_FULFILLED", payload: data})
+      })
+      .catch(error => {
+        this.props.dispatch({type: "FETCH_STATISTICS_ABOUT_BOXES_REJECTED", payload: error})
+      })
   }
 
   render() {
@@ -46,10 +55,12 @@ class BoxList extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    boxes: state.boxes.boxes,
-    totalShippingCost: state.boxes.totalShippingCost,
-    totalWeight: state.boxes.totalWeight,
-    error: state.boxes.error
+    boxes: state.boxesReducer.boxes,
+    totalShippingCost: state.statisticsAboutBoxesReducer.totalShippingCost,
+    totalWeight: state.statisticsAboutBoxesReducer.totalWeight,
+    boxesError: state.boxesReducer.boxesError,
+    statisticsAboutBoxesError: state.statisticsAboutBoxesReducer.statisticsAboutBoxesError
+
   }
 }
 export default connect(mapStateToProps)(BoxList);
