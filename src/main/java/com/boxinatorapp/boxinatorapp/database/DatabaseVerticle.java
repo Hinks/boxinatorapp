@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
-import java.util.function.BiFunction;
 
 public class DatabaseVerticle extends AbstractVerticle {
 
@@ -86,8 +85,7 @@ public class DatabaseVerticle extends AbstractVerticle {
     return Future.future(handler -> conn.close(handler));
   }
 
-
-
+  
   private void reportQueryError(Message<JsonObject> message, Throwable cause) {
     LOGGER.error("Database query error", cause);
     message.fail(ErrorCodes.DB_ERROR.ordinal(), cause.getMessage());
@@ -122,71 +120,64 @@ public class DatabaseVerticle extends AbstractVerticle {
 
   private void fetchBoxesHandler(JDBCClient dbClient, Message message){
 
-    String allBoxesQuery = sqlQueries.get(SqlQuery.ALL_BOXES);
+    Future<ResultSet> future = Future.future(
+      handler -> dbClient.query(sqlQueries.get(SqlQuery.ALL_BOXES), handler)
+    );
 
-    BiFunction<JDBCClient, String, Future<ResultSet>> simpleSQLQuery =
-      (theDbClient, theQuery) ->
-        Future.future(handler -> theDbClient.query(theQuery, handler));
+    future.setHandler(arResultSet -> {
 
-    SimpleSQLOperations.simpleOperation(dbClient, allBoxesQuery, simpleSQLQuery)
-      .setHandler(arResultSet -> {
+      if (arResultSet.succeeded()){
+        ResultSet rs = arResultSet.result();
+        JsonObject response = DbUtils.convertResultSetToJsonResponse(rs, DbUtils::boxesConverter);
+        message.reply(response);
 
-        if (arResultSet.succeeded()){
+      }else {
+        reportQueryError(message, arResultSet.cause());
+      }
 
-          JsonObject response = DbUtils.toDesiredJsonRes(arResultSet.result(), DbUtils::boxesResSetToJson);
-          message.reply(response);
+    });
 
-        }else {
-          reportQueryError(message, arResultSet.cause());
-        }
-
-      });
   }
 
   private void fetchStatsAboutBoxesHandler(JDBCClient dbClient, Message<JsonObject> message) {
 
-    String statsQuery = sqlQueries.get(SqlQuery.STATISTICS_ABOUT_BOXES);
+    Future<ResultSet> future = Future.future(
+      handler -> dbClient.query(sqlQueries.get(SqlQuery.STATISTICS_ABOUT_BOXES), handler)
+    );
 
-    BiFunction<JDBCClient, String, Future<ResultSet>> simpleSQLQuery =
-      (theDbClient, theQuery) ->
-        Future.future(handler -> theDbClient.query(theQuery, handler));
+    future.setHandler(arResultSet -> {
 
-    SimpleSQLOperations.simpleOperation(dbClient, statsQuery, simpleSQLQuery)
-      .setHandler(arResultSet -> {
+      if (arResultSet.succeeded()){
+        ResultSet rs = arResultSet.result();
+        JsonObject response = DbUtils.convertResultSetToJsonResponse(rs, DbUtils::statisticsAboutBoxesConverter);
+        message.reply(response);
 
-        if (arResultSet.succeeded()){
-
-          JsonObject response = DbUtils.toDesiredJsonRes(arResultSet.result(), DbUtils::statsBoxesResSetToJson);
-          message.reply(response);
-
-        }else {
-          reportQueryError(message, arResultSet.cause());
-        }
+      }else {
+        reportQueryError(message, arResultSet.cause());
+      }
 
     });
+
   }
 
   private void saveBoxHandler(JDBCClient dbClient, Message<JsonObject> message){
 
-    String saveBoxQuery = sqlQueries.get(SqlQuery.SAVE_BOX);
-
     JsonObject clientJsonBox = message.body().getJsonObject("clientJsonBox");
-    JsonArray params = DbUtils.convertClientBoxToJsonArray(clientJsonBox);
+    JsonArray params = DbUtils.convertBoxToParams(clientJsonBox);
 
-    BiFunction<JDBCClient, String, Future<UpdateResult>> simpleUpdateWithParamsQuery =
-      (theDbClient, theQuery) ->
-        Future.future(handler -> theDbClient.updateWithParams(theQuery, params, handler));
+    Future<UpdateResult> future = Future.future(
+      handler -> dbClient.updateWithParams(sqlQueries.get(SqlQuery.SAVE_BOX), params, handler)
+    );
 
-    SimpleSQLOperations.simpleOperation(dbClient, saveBoxQuery, simpleUpdateWithParamsQuery)
-      .setHandler(arUpdateResult -> {
+    future.setHandler(arUpdateResult -> {
 
-        if (arUpdateResult.succeeded()){
-          message.reply(new JsonObject().put("saveBoxRequest", "ok"));
-        }else {
-          reportQueryError(message, arUpdateResult.cause());
-        }
+      if (arUpdateResult.succeeded()){
+        message.reply(new JsonObject().put("saveBoxRequest", "ok"));
+      }else {
+        reportQueryError(message, arUpdateResult.cause());
+      }
 
-      });
+    });
   }
 
   private Properties getMySQLProperties(String fileName) throws IOException {

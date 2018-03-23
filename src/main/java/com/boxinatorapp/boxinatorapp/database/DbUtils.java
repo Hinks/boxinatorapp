@@ -11,16 +11,16 @@ import java.util.function.Function;
 public class DbUtils {
 
 
-  public static JsonObject toDesiredJsonRes(ResultSet resultSet, Function<ResultSet, JsonObject> converter){
+  public static JsonObject convertResultSetToJsonResponse(ResultSet resultSet, Function<ResultSet, JsonObject> converter){
     return converter.apply(resultSet);
   }
 
-  public static JsonObject boxesResSetToJson(ResultSet reslutSet){
+  public static JsonObject boxesConverter(ResultSet reslutSet){
     JsonArray boxes = reslutSet.toJson().getJsonArray("rows");
     return new JsonObject().put("boxes", boxes);
   }
 
-  public static JsonObject statsBoxesResSetToJson(ResultSet resultSet){
+  public static JsonObject statisticsAboutBoxesConverter(ResultSet resultSet){
     JsonObject rows = resultSet.toJson().getJsonArray("rows").getJsonObject(0);
 
     Optional<Float> totalWeight = Optional.ofNullable(rows.getFloat("TotalWeight"));
@@ -33,7 +33,7 @@ public class DbUtils {
     return stats;
   }
 
-  public static JsonArray convertClientBoxToJsonArray(JsonObject clientJsonBox){
+  public static JsonArray convertBoxToParams(JsonObject clientJsonBox){
 
     Optional<String> receiver = Optional.ofNullable(clientJsonBox.getString("receiver"));
     Optional<Float> weight = Optional.ofNullable(clientJsonBox.getFloat("weight"));
