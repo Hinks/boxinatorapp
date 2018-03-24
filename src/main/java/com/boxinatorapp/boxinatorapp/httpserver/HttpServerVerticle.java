@@ -145,7 +145,7 @@ public class HttpServerVerticle extends AbstractVerticle {
       }
     });
   }
-  
+
   private void saveBoxHandler(RoutingContext context) {
 
     DeliveryOptions options = new DeliveryOptions().addHeader("action", "save-box");

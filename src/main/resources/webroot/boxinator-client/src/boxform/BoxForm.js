@@ -1,10 +1,12 @@
 import React, { Component } from 'react'
-import InputField from './user-input/InputField'
 import * as validators from './validators'
 import hexToRgb from './colorConverter.js'
 import CONSTANTS from '../constants'
 import APIUtils from '../common'
-
+import TextField from 'material-ui/TextField'
+import RaisedButton from 'material-ui/RaisedButton'
+import SelectField from 'material-ui/SelectField'
+import MenuItem from 'material-ui/MenuItem'
 
 class BoxForm extends Component {
   constructor(props) {
@@ -100,62 +102,63 @@ class BoxForm extends Component {
   }
 
   render(){
-    const receiver =
-      <input
+
+    const style = {
+      margin: 12,
+    };
+
+    return (
+      <div>
+
+      <TextField
         name="receiver"
-        type="text"
+        onChange={this.handleInputChange}
         value={this.state.receiver}
-        onChange={this.handleInputChange}
-       />
-    const weight =
-      <input
+        errorText={this.state.receiverErrMsg}
+        floatingLabelText="Full name of receiver"
+        hintText="first and sur name"
+      /><br />
+
+      <TextField
         name="weight"
-        type="text"
-        placeholder="0.0"
-        value={this.state.weight}
         onChange={this.handleInputChange}
-      />
-    const color =
+        value={this.state.weight}
+        errorText={this.state.weightErrMsg}
+        floatingLabelText="Weight"
+        hintText="in kilograms"
+      /><br />
+
+      <TextField
+        floatingLabelText="Click to select color"
+        disabled={true}
+        value={this.state.color}
+        errorText={this.state.colorErrMsg}
+      /><br />
       <input
         name="color"
         type="color"
         value={this.state.color}
         onChange={this.handleInputChange}
-      />
-    const destinationCountry =
-      <select
-        name="destinationCountry"
-        value={this.state.destinationCountry}
-        onChange={this.handleInputChange}>
-          <option value="Australia">Australia</option>
-          <option value="Brazil">Brazil</option>
-          <option value="China">China</option>
-          <option value="Sweden">Sweden</option>
-      </select>
+      /><br />
 
-    return (
-      <div id="box-form">
-        <InputField
-          input={receiver}
-          label="Full name of receiver"
-          error={this.state.receiverErrMsg}
-        />
-        <InputField
-          input={weight}
-          label="Weight"
-          error={this.state.weightErrMsg}
-        />
-        <InputField
-          input={color}
-          label="Box Color"
-          error={this.state.colorErrMsg}
-        />
-        <InputField
-          input={destinationCountry}
-          label="Ship to Country"
-          error={this.state.destinationCountryErrMsg}
-        />
-        <button type="button" onClick={this.handleSaveButtonClick}>Save!</button>
+      <SelectField
+          floatingLabelText="Destination Country"
+          value={this.state.destinationCountry}
+          name="destinationCountry"
+          onChange={(event, index, value) => this.setState({destinationCountry: value})}
+        >
+          <MenuItem value={"Australia"} primaryText="Australia" />
+          <MenuItem value={"Brazil"} primaryText="Brazil" />
+          <MenuItem value={"China"} primaryText="China" />
+          <MenuItem value={"Sweden"} primaryText="Sweden" />
+        </SelectField><br />
+
+      <RaisedButton 
+        label="Save!" 
+        onClick={this.handleSaveButtonClick}
+        primary={true} 
+        style={style}/>
+      
       </div>
     )
   }
