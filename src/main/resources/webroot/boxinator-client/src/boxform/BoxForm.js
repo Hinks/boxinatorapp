@@ -1,12 +1,13 @@
 import React, { Component } from 'react'
 import * as validators from './validators'
-import hexToRgb from './colorConverter.js'
+import {hexToRgb} from './colorConverter.js'
 import CONSTANTS from '../constants'
 import APIUtils from '../common'
 import TextField from 'material-ui/TextField'
 import RaisedButton from 'material-ui/RaisedButton'
 import SelectField from 'material-ui/SelectField'
 import MenuItem from 'material-ui/MenuItem'
+import ColorPicker from './ColorPicker'
 
 class BoxForm extends Component {
   constructor(props) {
@@ -52,13 +53,15 @@ class BoxForm extends Component {
   handleInputChange = (event) => {
     const target = event.target
     const name = target.name
-    if (this.state.hasOwnProperty(name)) {
-      this.setState({
-        [name]: target.value
-      })
-    } else {
-      console.log("Pls don't modify the elements name parameter")
-    }
+    this.setState({
+      [name]: target.value
+    })
+  }
+
+  handleColorChange = (hexValue) => {
+    this.setState({
+      color: hexValue
+    })
   }
 
   postBoxToServer = (box) => {
@@ -128,17 +131,9 @@ class BoxForm extends Component {
         hintText="in kilograms"
       /><br />
 
-      <TextField
-        floatingLabelText="Click to select color"
-        disabled={true}
-        value={this.state.color}
+      <ColorPicker
+        onColorChange={this.handleColorChange}
         errorText={this.state.colorErrMsg}
-      /><br />
-      <input
-        name="color"
-        type="color"
-        value={this.state.color}
-        onChange={this.handleInputChange}
       /><br />
 
       <SelectField
