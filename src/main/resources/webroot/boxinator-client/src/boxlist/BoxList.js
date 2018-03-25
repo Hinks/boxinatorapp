@@ -2,6 +2,14 @@ import React, { Component } from 'react'
 import {connect} from 'react-redux'
 import {BoxItem} from './BoxItem'
 import APIUtils from '../common'
+import {
+  Table,
+  TableBody,
+  TableHeader,
+  TableHeaderColumn,
+  TableRow,
+  TableRowColumn,
+} from 'material-ui/Table';
 
 class BoxList extends Component {
   constructor(props) {
@@ -30,23 +38,32 @@ class BoxList extends Component {
 
   render() {
     const {boxes, totalShippingCost, totalWeight} = this.props
-    const boxItems = (boxes.lenght < 1) ? null : (boxes.map(box => <BoxItem key={box.Id} {...box}/>))
+    const boxList = (boxes.lenght < 1) ? null : (boxes.map(box => 
+
+    <TableRow key={box.Id} style={{padding: -20, margin: -20}}>
+      <TableRowColumn>{box.Receiver}</TableRowColumn>
+      <TableRowColumn>{box.Weight}</TableRowColumn>
+      <TableRowColumn style={{backgroundColor:`rgb(${box.Color})`}}></TableRowColumn>
+      <TableRowColumn>{box.ShippingCost} SEK</TableRowColumn>
+    </TableRow>
+  ))
 
     return (
       <div>
-        <table>
-          <tbody>
-            <tr>
-              <th>Receiver</th>
-              <th>Weight</th>
-              <th>Box color</th>
-              <th>ShippingCost</th>
-            </tr>
-            {boxItems}
-          </tbody>
-        </table>
-        <br></br>
-        <p>Total shipping cost: {totalShippingCost} SEK</p>
+          <Table>
+            <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
+              <TableRow>
+                <TableHeaderColumn>Receiver</TableHeaderColumn>
+                <TableHeaderColumn>Weight</TableHeaderColumn>
+                <TableHeaderColumn>Color</TableHeaderColumn>
+                <TableHeaderColumn>Shipping cost</TableHeaderColumn>
+              </TableRow>
+            </TableHeader>
+            <TableBody displayRowCheckbox={false}>
+              {boxList}
+            </TableBody>
+          </Table>
+          <p>Total shipping cost: {totalShippingCost} SEK</p>
         <p>Total weight: {totalWeight} kilograms</p>
       </div>
     )
