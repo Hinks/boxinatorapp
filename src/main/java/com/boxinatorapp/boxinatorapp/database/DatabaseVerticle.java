@@ -40,7 +40,7 @@ public class DatabaseVerticle extends AbstractVerticle {
     sqlQueries = loadSqlQueries("db-queries.properties");
 
     dbClient = JDBCClient.createShared(vertx, new JsonObject()
-      .put("url", config().getString(CONFIG_MYSQL_JDBC_URL, "jdbc:mysql://localhost/boxinatordb?useSSL=false"))
+      .put("url", config().getString(CONFIG_MYSQL_JDBC_URL, "jdbc:mysql://localhost/boxinatordb?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"))
       .put("driver_class", config().getString(CONFIG_MYSQL_JDBC_DRIVER_CLASS, "com.mysql.cj.jdbc.Driver"))
       .put("user", mysqlProps.getProperty("user"))
       .put("password", mysqlProps.getProperty("password")));
