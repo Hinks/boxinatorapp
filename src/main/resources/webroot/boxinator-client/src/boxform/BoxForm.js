@@ -8,6 +8,8 @@ import RaisedButton from 'material-ui/RaisedButton'
 import SelectField from 'material-ui/SelectField'
 import MenuItem from 'material-ui/MenuItem'
 import ColorPicker from './ColorPicker'
+import './stylesheets/box-form.css'
+
 
 class BoxForm extends Component {
   constructor(props) {
@@ -15,7 +17,7 @@ class BoxForm extends Component {
     this.state = {
       receiver: "",
       receiverErrMsg: "",
-      weight: "0",
+      weight: "",
       weightErrMsg: "",
       color: "#000000",
       colorErrMsg: "",
@@ -88,7 +90,7 @@ class BoxForm extends Component {
       this.clearForm()
     }else {
       if (validatedFrom.errors.weightErrMsg) {
-        this.setState({...validatedFrom.errors, weight: "0"})
+        this.setState({...validatedFrom.errors})
       } else {
         this.setState({...validatedFrom.errors})
       }
@@ -106,12 +108,8 @@ class BoxForm extends Component {
 
   render(){
 
-    const style = {
-      margin: 12,
-    };
-
     return (
-      <div>
+      <div className="box-form-container">
 
       <TextField
         name="receiver"
@@ -120,6 +118,7 @@ class BoxForm extends Component {
         errorText={this.state.receiverErrMsg}
         floatingLabelText="Full name of receiver"
         hintText="first and sur name"
+        fullWidth={true}
       /><br />
 
       <TextField
@@ -129,15 +128,12 @@ class BoxForm extends Component {
         errorText={this.state.weightErrMsg}
         floatingLabelText="Weight"
         hintText="in kilograms"
-      /><br />
-
-      <ColorPicker
-        onColorChange={this.handleColorChange}
-        errorText={this.state.colorErrMsg}
+        fullWidth={true}
       /><br />
 
       <SelectField
           floatingLabelText="Destination Country"
+          fullWidth={true}
           value={this.state.destinationCountry}
           name="destinationCountry"
           onChange={(event, index, value) => this.setState({destinationCountry: value})}
@@ -148,11 +144,17 @@ class BoxForm extends Component {
           <MenuItem value={"Sweden"} primaryText="Sweden" />
         </SelectField><br />
 
+      <ColorPicker
+        onColorChange={this.handleColorChange}
+        errorText={this.state.colorErrMsg}
+      /><br />
+
       <RaisedButton 
         label="Save!" 
         onClick={this.handleSaveButtonClick}
         primary={true} 
-        style={style}/>
+        fullWidth={true}
+        />
       
       </div>
     )

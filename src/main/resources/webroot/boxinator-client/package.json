@@ -16,7 +16,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "mocha './src/**/*.test.js' --compilers js:babel-core/register --require ./src/setupTests.js",
+    "test": "mocha './src/**/*.test.js' --compilers js:babel-core/register --require ./src/setupTests.js mocha --require ignore-styles",
     "lesscss": "lessc src/stylesheets/App.less src/stylesheets/App.css",
     "eject": "react-scripts eject"
   },
@@ -25,6 +25,7 @@
     "babel-preset-stage-2": "^6.24.1",
     "enzyme": "^3.3.0",
     "enzyme-adapter-react-16": "^1.1.1",
+    "ignore-styles": "^5.0.1",
     "jsdom": "^11.6.2",
     "react-addons-test-utils": "^15.6.2"
   }
