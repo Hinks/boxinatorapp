@@ -38,25 +38,18 @@ class BoxList extends Component {
 
   render() {
     const {boxes, totalShippingCost, totalWeight} = this.props
-    const boxList = (boxes.lenght < 1) ? null : (boxes.map(box => 
-
-    <TableRow key={box.Id} style={{padding: -20, margin: -20}}>
-      <TableRowColumn>{box.Receiver}</TableRowColumn>
-      <TableRowColumn>{box.Weight}</TableRowColumn>
-      <TableRowColumn style={{backgroundColor:`rgb(${box.Color})`}}></TableRowColumn>
-      <TableRowColumn>{box.ShippingCost} SEK</TableRowColumn>
-    </TableRow>
-  ))
+    
+    const boxList = (boxes.lenght < 1) ? null : (boxes.map(box => <BoxItem box={box}/>))
 
     return (
       <div>
           <Table>
             <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
               <TableRow>
-                <TableHeaderColumn>Receiver</TableHeaderColumn>
-                <TableHeaderColumn>Weight</TableHeaderColumn>
-                <TableHeaderColumn>Color</TableHeaderColumn>
-                <TableHeaderColumn>Shipping cost</TableHeaderColumn>
+                <TableHeaderColumn style={{fontSize: 24}}>Receiver </TableHeaderColumn>
+                <TableHeaderColumn style={{fontSize: 24}}>Weight</TableHeaderColumn>
+                <TableHeaderColumn style={{fontSize: 24}}>Color</TableHeaderColumn>
+                <TableHeaderColumn style={{fontSize: 24}}>Shipping cost</TableHeaderColumn>
               </TableRow>
             </TableHeader>
             <TableBody displayRowCheckbox={false}>
