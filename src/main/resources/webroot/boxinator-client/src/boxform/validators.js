@@ -1,6 +1,5 @@
 import CONSTANTS from '../constants'
 
-
 export function validateNameOfReceiver(receiver, errorObject){
 
   const regex = /^[a-z\u00C0-\u02AB'´`]+\.?\s([a-z\u00C0-\u02AB'´`]+\.?\s?)+$/i
@@ -30,29 +29,6 @@ export function validateWeight(weight, errorObject){
 
   } else {
       return errorObject
-  }
-}
-
-export function validateHexColor(color, errorObject){
-
-  const regex = /^#[0-9A-F]{6}$/i
-  const isValidHexColor = (hexColor) => hexColor.match(regex) != null
-  const containsBlueColor = (color) => color.slice(-2) !== "00"
-
-  if (!isValidHexColor(color)) {
-    const errorObjectCopy = deepCopy(errorObject)
-    errorObjectCopy.errorFound = true
-    errorObjectCopy.errors.colorErrMsg = CONSTANTS.ERROR_MESSAGES.invalidHexColor
-    return errorObjectCopy
-
-  } else if (containsBlueColor(color)){
-    const errorObjectCopy = deepCopy(errorObject)
-    errorObjectCopy.errorFound = true
-    errorObjectCopy.errors.colorErrMsg = CONSTANTS.ERROR_MESSAGES.invalidBoxColor
-    return errorObjectCopy
-
-  }else {
-    return errorObject
   }
 }
 

@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import Slider from 'material-ui/Slider'
 import RaisedButton from 'material-ui/RaisedButton'
 import TextField from 'material-ui/TextField'
-import {rgbToHex} from './colorConverter'
 import './stylesheets/color-picker.css'
 
 
@@ -20,8 +19,7 @@ class ColorPicker extends Component {
         this.setState({
             [name]: newValue
         })
-        const {red, green, blue} = {...this.state}
-        this.props.onColorChange(rgbToHex(red, green, blue))
+        this.props.onColorChange(this.state)
     }
 
     render() {

@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import * as validators from './validators'
-import {hexToRgb} from './colorConverter.js'
 import CONSTANTS from '../constants'
 import APIUtils from '../common'
 import TextField from 'material-ui/TextField'
@@ -19,8 +18,8 @@ class BoxForm extends Component {
       receiverErrMsg: "",
       weight: "",
       weightErrMsg: "",
-      color: "#000000",
-      colorErrMsg: "",
+      rgbColor: {red: 0, green: 0, blue: 0},
+      rgbColorErrMsg: "",
       destinationCountry: "Sweden",
       destinationCountryErrMsg: ""
     }
@@ -30,7 +29,7 @@ class BoxForm extends Component {
     this.setState({
       receiver: "",
       weight: "0",
-      color: "#000000",
+      rgbColor: {red: 0, green: 0, blue: 0},
       destinationCountry: "Sweden"
     })
   }
@@ -38,7 +37,7 @@ class BoxForm extends Component {
     this.setState({
       receiverErrMsg: "",
       weightErrMsg: "",
-      colorErrMsg: "",
+      rgbColorErrMsg: "",
       destinationCountryErrMsg: ""
     })
   }
@@ -47,7 +46,7 @@ class BoxForm extends Component {
     return {
       receiver: this.state.receiver,
       weight: this.state.weight,
-      color: this.state.color,
+      rgbColor: this.state.rgbColor,
       destinationCountry: this.state.destinationCountry
     }
   }
@@ -60,9 +59,9 @@ class BoxForm extends Component {
     })
   }
 
-  handleColorChange = (hexValue) => {
+  handleColorChange = (rgbColor) => {
     this.setState({
-      color: hexValue
+      rgbColor: {...rgbColor}
     })
   }
 
@@ -80,9 +79,11 @@ class BoxForm extends Component {
 
     if (!validatedFrom.errorFound) {
 
+      const {red, green, blue} = {...currentFormInputValues.rgbColor}
+      
       const boxReadyToPost = {
         ...currentFormInputValues,
-        color: hexToRgb(currentFormInputValues.color),
+        color: `${red},${green},${blue}`,
         weight: parseFloat(currentFormInputValues.weight)
       }
 
@@ -101,9 +102,8 @@ class BoxForm extends Component {
     const errorObject = { errorFound: false, errors: {} }
     const val1 = validators.validateNameOfReceiver(formInputValues.receiver, errorObject)
     const val2 = validators.validateWeight(formInputValues.weight, val1)
-    const val3 = validators.validateHexColor(formInputValues.color, val2)
-    const val4 = validators.validateDestinationCountry(formInputValues.destinationCountry, CONSTANTS.SUPPORTED_COUNTRIES, val3)
-    return val4
+    const val3 = validators.validateDestinationCountry(formInputValues.destinationCountry, CONSTANTS.SUPPORTED_COUNTRIES, val2)
+    return val3
   }
 
   render(){
@@ -146,7 +146,7 @@ class BoxForm extends Component {
 
       <ColorPicker
         onColorChange={this.handleColorChange}
-        errorText={this.state.colorErrMsg}
+        errorText={this.state.rgbColorErrMsg}
       /><br />
 
       <RaisedButton 

@@ -1,7 +1,6 @@
 import {
   validateNameOfReceiver,
   validateWeight,
-  validateHexColor,
   validateDestinationCountry
 } from '../validators.js'
 import CONSTANTS from '../../constants'
@@ -62,48 +61,6 @@ describe("Should be invalid names and generate an error message.", () => {
   it("Empty String", () => {
     assert.deepEqual(validateNameOfReceiver("", emptyErrorObj), expectedErrorObj)
   })
-})
-
-describe("Valid hex colors without any blue should not generate an error message.", () => {
-
-  it("#F19A00", () => {
-    assert.deepEqual(validateHexColor("#F19A00", emptyErrorObj), emptyErrorObj)
-  })
-
-  it("#f19a00", () => {
-    assert.deepEqual(validateHexColor("#F19A00", emptyErrorObj), emptyErrorObj)
-  })
-
-})
-
-describe("Invalid hex colors should generate an error message.", () => {
-
-  const expectedErrorObjForInvalidHex = {
-    errorFound: true,
-    errors: {
-      colorErrMsg: CONSTANTS.ERROR_MESSAGES.invalidHexColor
-    }
-  }
-  const expectedErrorObjForAnyBlueColor = {
-    errorFound: true,
-    errors: {
-      colorErrMsg: CONSTANTS.ERROR_MESSAGES.invalidBoxColor
-    }
-  }
-
-  it("#F19A0", () => {
-    assert.deepEqual(validateHexColor("#F19A0", emptyErrorObj), expectedErrorObjForInvalidHex)
-  })
-  it("#F19A000", () => {
-    assert.deepEqual(validateHexColor("#F19A000", emptyErrorObj), expectedErrorObjForInvalidHex)
-  })
-  it("#F19A01", () => {
-    assert.deepEqual(validateHexColor("#F19A01", emptyErrorObj), expectedErrorObjForAnyBlueColor)
-  })
-  it("#F19AFF", () => {
-    assert.deepEqual(validateHexColor("#F19AFF", emptyErrorObj), expectedErrorObjForAnyBlueColor)
-  })
-
 })
 
 describe("Valid weight should not generate an error message.", () => {
@@ -216,16 +173,15 @@ describe("Combined validators", () => {
       errors: {
         receiverErrMsg: CONSTANTS.ERROR_MESSAGES.invalidName,
         weightErrMsg: CONSTANTS.ERROR_MESSAGES.invalidWeight,
-        colorErrMsg: CONSTANTS.ERROR_MESSAGES.invalidHexColor,
+        colorErrMsg: CONSTANTS.ERROR_MESSAGES.invalidRGBColor,
         destinationCountryErrMsg: CONSTANTS.ERROR_MESSAGES.invalidDestinationCountry(box.destinationCountry)
       }
     }
 
     const val1 = validateNameOfReceiver(box.receiver, emptyErrorObj)
     const val2 = validateWeight(box.weight, val1)
-    const val3 = validateHexColor(box.color, val2)
-    const val4 = validateDestinationCountry(box.destinationCountry, CONSTANTS.SUPPORTED_COUNTRIES, val3)
-    assert.deepEqual(val4, expectedErrorObj)
+    const val3 = validateDestinationCountry(box.destinationCountry, CONSTANTS.SUPPORTED_COUNTRIES, val2)
+    assert.deepEqual(val3, expectedErrorObj)
   })
 
   it("Valid box should not generate any error messages.", () => {
@@ -238,9 +194,8 @@ describe("Combined validators", () => {
     }
     const val1 = validateNameOfReceiver(box.receiver, emptyErrorObj)
     const val2 = validateWeight(box.weight, val1)
-    const val3 = validateHexColor(box.color, val2)
-    const val4 = validateDestinationCountry(box.destinationCountry, CONSTANTS.SUPPORTED_COUNTRIES, val3)
-    assert.deepEqual(val4, emptyErrorObj)
+    const val3 = validateDestinationCountry(box.destinationCountry, CONSTANTS.SUPPORTED_COUNTRIES, val2)
+    assert.deepEqual(val3, emptyErrorObj)
   })
 
 })
