@@ -1,6 +1,6 @@
 # boxinatorapp
 Backend: Java using vertx Web and mysql.<br />
-Frontend reactjs together with redux, react-router, less-css
+Frontend reactjs together with redux, react-router, material-ui
 
 **Requirements**:<br />
 Java jdk 8+ <br />
