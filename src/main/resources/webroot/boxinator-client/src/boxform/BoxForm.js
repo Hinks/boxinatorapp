@@ -25,30 +25,26 @@ class BoxForm extends Component {
     }
   }
 
-  clearForm = () => {
-    this.setState({
+  getDefaultStateValues() {
+    return {
       receiver: "",
       weight: "0",
       rgbColor: {red: 0, green: 0, blue: 0},
       destinationCountry: "Sweden"
-    })
-  }
-  clearErrorMsgs = () => {
-    this.setState({
-      receiverErrMsg: "",
-      weightErrMsg: "",
-      rgbColorErrMsg: "",
-      destinationCountryErrMsg: ""
-    })
+    }
   }
 
-  getCurrentFormInputValues = () => {
-    return {
-      receiver: this.state.receiver,
-      weight: this.state.weight,
-      rgbColor: this.state.rgbColor,
-      destinationCountry: this.state.destinationCountry
+  getStateWithErrMsgsCleared(obj) {
+
+    const mapper = ([key, val]) => {
+      if(key.includes("ErrMsg")){
+        return { [key]: "" }
+      }else{
+        return { [key]: val }
+      }
     }
+
+    return Object.assign(...Object.entries(obj).map(mapper));
   }
 
   handleInputChange = (event) => {
@@ -59,9 +55,10 @@ class BoxForm extends Component {
     })
   }
 
-  handleColorChange = (rgbColor) => {
+  handleColorChange = (oneColorVal) => {
+    const newColorVal = {...this.state.rgbColor, ...oneColorVal}
     this.setState({
-      rgbColor: {...rgbColor}
+      rgbColor: newColorVal
     })
   }
 
@@ -72,37 +69,39 @@ class BoxForm extends Component {
   }
 
   handleSaveButtonClick = () => {
-    this.clearErrorMsgs()
 
-    const currentFormInputValues = this.getCurrentFormInputValues()
-    const validatedFrom = this.validateFormInputFields(currentFormInputValues)
+    const validatedState = this.validateState(this.getStateWithErrMsgsCleared(this.state))
 
-    if (!validatedFrom.errorFound) {
+    if (!this.stateContainsError(validatedState)) {
 
-      const {red, green, blue} = {...currentFormInputValues.rgbColor}
+      const {red, green, blue} = {...validatedState.rgbColor}
       
       const boxReadyToPost = {
-        ...currentFormInputValues,
+        receiver: validatedState.receiver,
+        weight: parseFloat(validatedState.weight),
         color: `${red},${green},${blue}`,
-        weight: parseFloat(currentFormInputValues.weight)
+        destinationCountry: validatedState.destinationCountry
       }
 
       this.postBoxToServer(boxReadyToPost)
-      this.clearForm()
+      this.setState({...this.getStateWithErrMsgsCleared(validatedState), ...this.getDefaultStateValues()})
     }else {
-      if (validatedFrom.errors.weightErrMsg) {
-        this.setState({...validatedFrom.errors})
-      } else {
-        this.setState({...validatedFrom.errors})
-      }
+      this.setState({...validatedState})
     }
   }
 
-  validateFormInputFields(formInputValues){
-    const errorObject = { errorFound: false, errors: {} }
-    const val1 = validators.validateNameOfReceiver(formInputValues.receiver, errorObject)
-    const val2 = validators.validateWeight(formInputValues.weight, val1)
-    const val3 = validators.validateDestinationCountry(formInputValues.destinationCountry, CONSTANTS.SUPPORTED_COUNTRIES, val2)
+  stateContainsError(currentState) {
+    const errors = currentState.receiverErrMsg
+      .concat(currentState.weightErrMsg)
+      .concat(currentState.destinationCountryErrMsg)
+
+    return (errors.length > 0)
+  }
+
+  validateState(currentState){
+    const val1 = validators.validateNameOfReceiver(currentState)
+    const val2 = validators.validateWeight(val1)
+    const val3 = validators.validateDestinationCountry(val2, CONSTANTS.SUPPORTED_COUNTRIES)
     return val3
   }
 
@@ -145,6 +144,9 @@ class BoxForm extends Component {
         </SelectField><br />
 
       <ColorPicker
+        red={this.state.rgbColor.red}
+        green={this.state.rgbColor.green}
+        blue={this.state.rgbColor.blue}
         onColorChange={this.handleColorChange}
         errorText={this.state.rgbColorErrMsg}
       /><br />

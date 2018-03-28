@@ -8,24 +8,16 @@ import './stylesheets/color-picker.css'
 class ColorPicker extends Component {
     constructor(props) {
         super(props)
-        this.state = {
-            red: 0,
-            green: 0,
-            blue: 0
-        }
     }
 
     handleSliderChange = name => (event, newValue) => {
-        this.setState({
-            [name]: newValue
-        })
-        this.props.onColorChange(this.state)
+        this.props.onColorChange({[name]: newValue})
     }
 
     render() {
 
         const colorIndicatorStyle = {
-            backgroundColor: `rgb(${this.state.red}, ${this.state.green}, ${this.state.blue})`,
+            backgroundColor: `rgb(${this.props.red}, ${this.props.green}, ${this.props.blue})`,
             height: "50%",
             marginTop: 20,
             marginBottom: 0,
@@ -48,7 +40,7 @@ class ColorPicker extends Component {
                     min={0}
                     max={255}
                     step={10}
-                    value={this.state.red}
+                    value={this.props.red}
                     onChange={this.handleSliderChange("red")}
                     sliderStyle={style}
                 /><br />
@@ -56,7 +48,7 @@ class ColorPicker extends Component {
                     min={0}
                     max={255}
                     step={10}
-                    value={this.state.green}
+                    value={this.props.green}
                     onChange={this.handleSliderChange("green")}
                     sliderStyle={style}
                 /><br />
@@ -64,7 +56,7 @@ class ColorPicker extends Component {
                     min={0}
                     max={255}
                     step={10}
-                    value={this.state.blue}
+                    value={this.props.blue}
                     onChange={this.handleSliderChange("blue")}
                     sliderStyle={style}
                 />
