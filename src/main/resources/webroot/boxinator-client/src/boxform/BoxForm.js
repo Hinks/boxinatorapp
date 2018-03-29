@@ -25,7 +25,7 @@ class BoxForm extends Component {
     }
   }
 
-  getDefaultStateValues() {
+  defaultStateValues() {
     return {
       receiver: "",
       weight: "0",
@@ -34,20 +34,20 @@ class BoxForm extends Component {
     }
   }
 
-  getStateWithErrMsgsCleared(obj) {
+  stateWithClearedErrMsgs(obj) {
 
-    const mapper = ([key, val]) => {
-      if(key.includes("ErrMsg")){
+    const mapper = errMsgSuffix => ([key, val]) => {
+      if(key.includes(errMsgSuffix)){
         return { [key]: "" }
       }else{
         return { [key]: val }
       }
     }
 
-    return Object.assign(...Object.entries(obj).map(mapper));
+    return Object.assign(...Object.entries(obj).map(mapper("ErrMsg")));
   }
 
-  handleInputChange = (event) => {
+  handleTextInputChange = (event) => {
     const target = event.target
     const name = target.name
     this.setState({
@@ -55,10 +55,16 @@ class BoxForm extends Component {
     })
   }
 
-  handleColorChange = (oneColorVal) => {
-    const newColorVal = {...this.state.rgbColor, ...oneColorVal}
+  handleColorChange = (newAdditivePrimaryColor) => {
+    const newRgbColor = {...this.state.rgbColor, ...newAdditivePrimaryColor}
     this.setState({
-      rgbColor: newColorVal
+      rgbColor: newRgbColor
+    })
+  }
+
+  handleDestinationCountryChange = (event, index, value) => {
+    this.setState({
+      destinationCountry: value
     })
   }
 
@@ -70,7 +76,7 @@ class BoxForm extends Component {
 
   handleSaveButtonClick = () => {
 
-    const validatedState = this.validateState(this.getStateWithErrMsgsCleared(this.state))
+    const validatedState = this.validateState(this.stateWithClearedErrMsgs(this.state))
 
     if (!this.stateContainsError(validatedState)) {
 
@@ -84,21 +90,25 @@ class BoxForm extends Component {
       }
 
       this.postBoxToServer(boxReadyToPost)
-      this.setState({...this.getStateWithErrMsgsCleared(validatedState), ...this.getDefaultStateValues()})
+      this.setState({...this.stateWithClearedErrMsgs(validatedState), ...this.defaultStateValues()})
     }else {
       this.setState({...validatedState})
     }
   }
 
   stateContainsError(currentState) {
-    const errors = currentState.receiverErrMsg
-      .concat(currentState.weightErrMsg)
-      .concat(currentState.destinationCountryErrMsg)
 
-    return (errors.length > 0)
+    const matcher = errMsgSuffix => ([key, val]) => key.includes(errMsgSuffix)
+    const reducer = ( accum, [key, val] ) => accum.concat(val);
+
+    const concatenatedErrors = Object.entries(currentState)
+      .filter(matcher("ErrMsg"))
+      .reduce(reducer, "")
+
+    return (concatenatedErrors.length > 0)
   }
 
-  validateState(currentState){
+  validateState(currentState) {
     const val1 = validators.validateNameOfReceiver(currentState)
     const val2 = validators.validateWeight(val1)
     const val3 = validators.validateDestinationCountry(val2, CONSTANTS.SUPPORTED_COUNTRIES)
@@ -112,7 +122,7 @@ class BoxForm extends Component {
 
       <TextField
         name="receiver"
-        onChange={this.handleInputChange}
+        onChange={this.handleTextInputChange}
         value={this.state.receiver}
         errorText={this.state.receiverErrMsg}
         floatingLabelText="Full name of receiver"
@@ -122,7 +132,7 @@ class BoxForm extends Component {
 
       <TextField
         name="weight"
-        onChange={this.handleInputChange}
+        onChange={this.handleTextInputChange}
         value={this.state.weight}
         errorText={this.state.weightErrMsg}
         floatingLabelText="Weight"
@@ -134,8 +144,7 @@ class BoxForm extends Component {
           floatingLabelText="Destination Country"
           fullWidth={true}
           value={this.state.destinationCountry}
-          name="destinationCountry"
-          onChange={(event, index, value) => this.setState({destinationCountry: value})}
+          onChange={this.handleDestinationCountryChange}
         >
           <MenuItem value={"Australia"} primaryText="Australia" />
           <MenuItem value={"Brazil"} primaryText="Brazil" />
