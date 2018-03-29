@@ -12,41 +12,27 @@ export function postBox(fetch, box){
 
   return fetch("http://localhost:8080/api/savebox", init)
     .then(res => res.json())
-    .then(response => {
-      if (!("error" in response)) {
-        return response.data
-      } else {
-        const {message, ...otherErrors} = response.error
-        const error = new Error(message)
-        return Promise.reject(Object.assign(error, { ...otherErrors }))
-      }
-    })
+    .then(handleResponse)
 }
 
 export function getBoxes(fetch){
   return fetch("http://localhost:8080/api/boxes", {mode: "cors"})
     .then(res => res.json())
-    .then(response => {
-      if (!("error" in response)) {
-        return response.data
-      } else {
-        const {message, ...otherErrors} = response.error
-        const error = new Error(message)
-        return Promise.reject(Object.assign(error, { ...otherErrors }))
-      }
-    })
+    .then(handleResponse)
 }
 
 export function getStatisticsAboutBoxes(fetch){
   return fetch("http://localhost:8080/api/stats/boxes", {mode: "cors"})
     .then(res => res.json())
-    .then(response => {
-      if (!("error" in response)) {
-        return response.data
-      } else {
-        const {message, ...otherErrors} = response.error
-        const error = new Error(message)
-        return Promise.reject(Object.assign(error, { ...otherErrors }))
-      }
-    })
+    .then(handleResponse)
+}
+
+function handleResponse(response){
+  if (!("error" in response)) {
+    return response.data
+  } else {
+    const {message, ...otherErrors} = response.error
+    const error = new Error(message)
+    return Promise.reject(Object.assign(error, { ...otherErrors }))
+  }
 }
