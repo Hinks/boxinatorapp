@@ -3,14 +3,14 @@ import {TableRow, TableRowColumn} from 'material-ui/Table'
 
 function ReceiverColumn(props){
   return (
-    <TableRowColumn>{props.Receiver}</TableRowColumn>
+    <TableRowColumn><p>{props.Receiver}</p></TableRowColumn>
   )
 }
 
 function WeightColumn(props){
 
   return (
-    <TableRowColumn>{props.Weight}</TableRowColumn>
+    <TableRowColumn><p> {props.Weight} kg</p></TableRowColumn>
   )
 }
 
@@ -25,7 +25,7 @@ function ColorColumn(props){
 
 function ShippingCostColumn(props){
   return (
-    <TableRowColumn>{props.ShippingCost} SEK</TableRowColumn>
+    <TableRowColumn><p>{props.ShippingCost} SEK</p></TableRowColumn>
   )
 }
 
