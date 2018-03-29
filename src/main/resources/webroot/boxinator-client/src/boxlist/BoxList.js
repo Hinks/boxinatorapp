@@ -39,7 +39,7 @@ class BoxList extends Component {
   render() {
     const {boxes, totalShippingCost, totalWeight} = this.props
     
-    const boxList = (boxes.lenght < 1) ? null : (boxes.map(box => <BoxItem box={box}/>))
+    const boxList = (boxes.lenght < 1) ? null : (boxes.map(box => <BoxItem key={box.Id} box={box}/>))
 
     return (
       <div>

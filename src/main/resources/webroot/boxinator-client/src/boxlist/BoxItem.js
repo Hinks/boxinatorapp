@@ -31,10 +31,10 @@ function ShippingCostColumn(props){
 
 
 export function BoxItem(props){
-  const {Id, Receiver, Weight, Color, ShippingCost} = {...props.box}
+  const {Receiver, Weight, Color, ShippingCost} = {...props.box}
 
   return (
-    <TableRow key={Id}>
+    <TableRow>
       <ReceiverColumn Receiver={Receiver}/>
       <WeightColumn Weight={Weight}/>
       <ColorColumn Color={Color}/>
