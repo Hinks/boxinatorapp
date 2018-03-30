@@ -43,9 +43,9 @@ describe("<BoxForm />", () => {
     wrapper.find('button').simulate('click');
     const expectedState = {
       receiver: "",
-      receiverErrMsg: CONSTANTS.ERROR_MESSAGES.invalidName,
+      receiverErrMsg: CONSTANTS.ERROR_MESSAGES.INVALID_NAME,
       weight: "0",
-      weightErrMsg: CONSTANTS.ERROR_MESSAGES.invalidWeight,
+      weightErrMsg: CONSTANTS.ERROR_MESSAGES.INVALID_WEIGHT,
       color: '#000000',
       colorErrMsg: "",
       destinationCountry: 'Sweden',

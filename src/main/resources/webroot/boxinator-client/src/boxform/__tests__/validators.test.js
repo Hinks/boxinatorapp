@@ -38,7 +38,7 @@ describe("Should be invalid names and generate an error message.", () => {
   const expectedErrorObj = {
     errorFound: true,
     errors: {
-      receiverErrMsg: CONSTANTS.ERROR_MESSAGES.invalidName
+      receiverErrMsg: CONSTANTS.ERROR_MESSAGES.INVALID_NAME
     }
   }
 
@@ -90,7 +90,7 @@ describe("Invalid weight should generate an error message.", () => {
   const expectedErrorObj = {
     errorFound: true,
     errors: {
-      weightErrMsg: CONSTANTS.ERROR_MESSAGES.invalidWeight
+      weightErrMsg: CONSTANTS.ERROR_MESSAGES.INVALID_WEIGHT
     }
   }
 
@@ -139,7 +139,7 @@ describe("Invalid country should generate an error message.(Country is case sens
     const expectedErrorObj = {
       errorFound: true,
       errors: {
-        destinationCountryErrMsg: CONSTANTS.ERROR_MESSAGES.invalidDestinationCountry(country)
+        destinationCountryErrMsg: CONSTANTS.ERROR_MESSAGES.INVALID_DESTINATION_COUNTRY(country)
       }
     }
     assert.deepEqual(validateDestinationCountry(country, CONSTANTS.SUPPORTED_COUNTRIES, emptyErrorObj), expectedErrorObj)
@@ -150,7 +150,7 @@ describe("Invalid country should generate an error message.(Country is case sens
     const expectedErrorObj = {
       errorFound: true,
       errors: {
-        destinationCountryErrMsg: CONSTANTS.ERROR_MESSAGES.invalidDestinationCountry(country)
+        destinationCountryErrMsg: CONSTANTS.ERROR_MESSAGES.INVALID_DESTINATION_COUNTRY(country)
       }
     }
     assert.deepEqual(validateDestinationCountry(country, CONSTANTS.SUPPORTED_COUNTRIES, emptyErrorObj), expectedErrorObj)
@@ -171,10 +171,10 @@ describe("Combined validators", () => {
     const expectedErrorObj = {
       errorFound: true,
       errors: {
-        receiverErrMsg: CONSTANTS.ERROR_MESSAGES.invalidName,
-        weightErrMsg: CONSTANTS.ERROR_MESSAGES.invalidWeight,
-        colorErrMsg: CONSTANTS.ERROR_MESSAGES.invalidRGBColor,
-        destinationCountryErrMsg: CONSTANTS.ERROR_MESSAGES.invalidDestinationCountry(box.destinationCountry)
+        receiverErrMsg: CONSTANTS.ERROR_MESSAGES.INVALID_NAME,
+        weightErrMsg: CONSTANTS.ERROR_MESSAGES.INVALID_WEIGHT,
+        colorErrMsg: CONSTANTS.ERROR_MESSAGES.INVALID_RGB_COLOR,
+        destinationCountryErrMsg: CONSTANTS.ERROR_MESSAGES.INVALID_DESTINATION_COUNTRY(box.destinationCountry)
       }
     }
 

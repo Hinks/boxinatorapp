@@ -109,10 +109,15 @@ class BoxForm extends Component {
   }
 
   validateState(currentState) {
-    const val1 = validators.validateNameOfReceiver(currentState)
-    const val2 = validators.validateWeight(val1)
-    const val3 = validators.validateDestinationCountry(val2, CONSTANTS.SUPPORTED_COUNTRIES)
-    return val3
+    const validatorList = [
+      validators.validateNameOfReceiver,
+      validators.validateWeight,
+      validators.validateDestinationCountry(CONSTANTS.SUPPORTED_COUNTRIES)
+    ]
+
+    const validatedState = validatorList.reduce( (accumState, fn) => fn(accumState), currentState)
+
+    return validatedState
   }
 
   render(){

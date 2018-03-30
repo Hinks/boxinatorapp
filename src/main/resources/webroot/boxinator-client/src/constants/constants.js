@@ -1,8 +1,7 @@
 export const SUPPORTED_COUNTRIES = ["Australia","Brazil","China","Sweden"]
 export const ERROR_MESSAGES = {
-  invalidName: "Name is not valid",
-  invalidWeight: "Not a valid number",
-  invalidRGBColor: "Invalid hex color",
-  invalidBoxColor: "Any color of blue is disallowed",
-  invalidDestinationCountry: (destinationCountry) => `Shipping to ${destinationCountry} is not supported`
+  INVALID_NAME: "Name is not valid",
+  INVALID_WEIGHT: "Not a valid number",
+  INVALID_RGB_COLOR: "Invalid hex color",
+  INVALID_DESTINATION_COUNTRY: (destinationCountry) => `Shipping to ${destinationCountry} is not supported`
 }
